@@ -1,17 +1,11 @@
 from fastapi import FastAPI
+from . import schemas
 
 app = FastAPI()
 
-@app.get("/")
-def index():
+@app.post("/blog")
+def create(request: schemas.Blog):
     return {
-        "data": "index page",
-    }
-
-@app.get("/about")
-def about():
-    return {
-        "data": {
-            "name": "About Page",
-        }
+        "title": request.title,
+        "body": request.body,
     }
