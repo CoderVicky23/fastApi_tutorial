@@ -23,23 +23,25 @@ def get_db():
 
 @app.post("/blog", status_code=status.HTTP_201_CREATED)
 def create(request: schemas.Blog, db: Session = Depends(get_db)):
-    new_blog = models.Blog(title = request.title, body = request.body)
+    new_blog = models.Blog(title = request.title, body = request.body, user_id = 1)
     db.add(new_blog)
     db.commit()
     db.refresh(new_blog)
     return new_blog
 
-@app.get("/blog", response_model=List[schemas.showBlog])
+@app.get("/blog", response_model=List[schemas.ShowBlog])
 def all(db: Session = Depends(get_db)):
     blogs = db.query(models.Blog).all()
     return blogs
 
-@app.get("/blog/{id}", status_code=status.HTTP_200_OK, response_model=schemas.showBlog) 
-def show(id, response: Response, db: Session = Depends(get_db)):
+@app.get("/blog/{id}", status_code=status.HTTP_200_OK, response_model=schemas.ShowBlog)
+def show(id, db: Session = Depends(get_db)):
     blog = db.query(models.Blog).filter(models.Blog.id == id).first()
     if not blog:
-        response.status_code = status.HTTP_404_NOT_FOUND
-        return {"detail": f"Blog with given Id {id} not found!"}
+        raise HTTPException(
+            status_code = status.HTTP_404_NOT_FOUND,
+            detail= {"detail": f"Blog with given Id {id} not found!"}
+        )
     return blog
 
 @app.delete("/blog/{id}")
@@ -68,8 +70,8 @@ def update(id, request: schemas.Blog, db: Session = Depends(get_db)):
 
 
 
-@app.post("/user")
-def user(request: schemas.User, db: Session = Depends(get_db), tags=['user']):
+@app.post("/user", tags=["user"])
+def user(request: schemas.User, db: Session = Depends(get_db)):
     hashedPassword = hashing.Hash.bcrypt(request.password)
     new_user = models.Users(name=request.name, email=request.email, password=hashedPassword)
     db.add(new_user)
